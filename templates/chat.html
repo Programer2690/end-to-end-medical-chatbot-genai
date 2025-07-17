@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Chatbot</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+  />
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+  />
+</head>
+<body>
+  <div class="wrapper">
+    <div class="title">Medical Chatbot</div>
+    <div class="box" id="chat-box">
+      <!-- Messages go here -->
+    </div>
+    <div class="typing-area">
+      <input
+        type="text"
+        id="user-input"
+        placeholder="Type your message"
+        required
+      />
+      <button onclick="sendMessage()"><i class="fa fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <script>
+    function appendMessage(message, sender) {
+      const box = document.getElementById("chat-box");
+      const item = document.createElement("div");
+      item.classList.add("item", sender);
+
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("msg");
+      msgDiv.innerHTML = `<p>${message}</p>`;
+
+      item.appendChild(msgDiv);
+      box.appendChild(item);
+
+      box.scrollTop = box.scrollHeight - box.clientHeight;
+    }
+
+    async function sendMessage() {
+      const inputField = document.getElementById("user-input");
+      const message = inputField.value.trim();
+      if (!message) return;
+      appendMessage(message, "user");
+
+      inputField.value = "";
+      inputField.focus();
+
+      try {
+        const res = await fetch("/get", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: `msg=${encodeURIComponent(message)}`,
+        });
+        const answer = await res.text();
+        appendMessage(answer, "bot");
+      } catch (err) {
+        appendMessage("Error connecting to server.", "bot");
+      }
+    }
+
+    document
+      .getElementById("user-input")
+      .addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMessage();
+      });
+  </script>
+</body>
+</html>
